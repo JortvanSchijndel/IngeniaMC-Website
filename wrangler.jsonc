@@ -16,6 +16,11 @@
 	"vars": {
 		"ALLOWED_ORIGIN": "https://ingeniamc.org"
 	},
+	"secrets": [
+		"STRIPE_SECRET_KEY",
+		"STRIPE_WEBHOOK_SECRET"
+	],
+	"env": {},
 	"observability": {
 		"enabled": true
 	}
