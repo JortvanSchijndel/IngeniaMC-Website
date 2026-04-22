@@ -1,0 +1,468 @@
+---
+/**
+    * store.astro
+    *
+    * The IngeniaMC Store page.
+    *
+    * SSR responsibilities (now minimal):
+    *   The page renders with all products in their default "not owned" state.
+    *   No database or cookie is consulted at render time. This keeps the page
+    *   fully static-cacheable and removes the D1 dependency from the hot path.
+    *
+    * Client responsibilities:
+    *   1. On load, attempt to restore the session from localStorage. If a
+    *      username is found, fetch /api/ownership to learn which products the
+    *      user already owns and update the UI accordingly.
+    *   2. If no username is stored in localStorage, open the forced login modal.
+    *      The user must identify themselves before the store is usable.
+    *   3. After a successful login, immediately fetch ownership and refresh
+    *      product button states.
+    *   4. Handle tab switching, product modal open/close, and add-to-cart via
+    *      delegated event listeners.
+    *
+    * Why client-side ownership?
+    *   Ownership now lives exclusively in Stripe (via completed checkout sessions).
+    *   Fetching it server-side at render time would require a Stripe API call on
+    *   every page load, which is slow and expensive. Fetching client-side after
+    *   the session resolves keeps the initial render fast and the Stripe calls
+    *   lazy and user-scoped.
+    */
+
+export const prerender = false;
+
+import Layout from "../layouts/Layout.astro";
+import { Image } from "astro:assets";
+import { STORE_PRODUCTS } from "../config";
+import MagicVillage from "../assets/images/magic_village.png";
+import CartSVG from "./../assets/icons/cart.svg";
+import LogOut from "./../assets/icons/logout.svg";
+import Cart from "../components/store/Cart.astro";
+import LoginModal from "../components/store/LoginModal.astro";
+import ProductCard from "../components/store/ProductCard.astro";
+import ProductModal from "../components/store/ProductModal.astro";
+
+// Separate products by category for the tabbed layout
+const ranks = STORE_PRODUCTS.filter((p) => p.category === "rank");
+const wands = STORE_PRODUCTS.filter((p) => p.category === "wand");
+---
+
+<Layout activePage="store">
+    <div id="store-root" class="contents">
+
+        <!-- Hero -->
+        <section class="relative h-[40vh] flex items-center justify-center overflow-hidden" aria-label="Store hero">
+            <div class="absolute inset-0 z-0" aria-hidden="true">
+                <div class="absolute inset-0 bg-black/50 z-10"></div>
+                <Image
+                        src={MagicVillage}
+                        alt=""
+                        class="w-full h-full object-cover scale-105 blur-sm"
+                        loading="eager"
+                />
+                <div class="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-(--bg-primary) to-transparent z-20"></div>
+            </div>
+            <div class="container mx-auto px-6 relative z-30 text-center">
+                <h1 class="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-2xl">
+                    Upgrade Your <span class="text-(--ingenia)">Adventure</span>
+                </h1>
+                <p class="text-(--secondary) text-lg md:text-xl font-medium italic opacity-90">
+                    Exclusive ranks, magical wands, and bundles.
+                </p>
+            </div>
+        </section>
+
+        <!-- Sticky tab bar -->
+        <div
+                class="sticky top-15 z-40 bg-(--bg-primary)/90 backdrop-blur-xl border-b border-(--bg-quaternary)"
+                role="navigation"
+                aria-label="Store categories"
+        >
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="flex items-center justify-between py-3 gap-4">
+                    <div class="relative flex bg-(--bg-secondary) p-1 rounded-xl border border-(--bg-quaternary) w-fit" role="tablist">
+                        <div
+                                id="tab-indicator"
+                                class="absolute top-1 bottom-1 left-1 rounded-lg bg-(--ingenia) transition-all duration-300 ease-out shadow-[0_0_20px_rgba(var(--ingenia-rgb),0.3)]"
+                                aria-hidden="true"
+                        ></div>
+                        <button
+                                id="tab-ranks"
+                                class="tab-btn active relative z-10 px-6 py-2 rounded-lg font-bold text-sm uppercase tracking-wider transition-colors duration-200"
+                                data-tab="ranks"
+                                role="tab"
+                                aria-selected="true"
+                                aria-controls="panel-ranks"
+                        >
+                            Ranks
+                        </button>
+                        <button
+                                id="tab-wands"
+                                class="tab-btn relative z-10 px-6 py-2 rounded-lg font-bold text-sm uppercase tracking-wider transition-colors duration-200 text-(--secondary)"
+                                data-tab="wands"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="panel-wands"
+                        >
+                            Wands
+                        </button>
+                    </div>
+
+                    <!-- Auth + cart controls -->
+                    <div class="flex items-center gap-3">
+                        <div
+                                id="user-display"
+                                class="group hidden items-center gap-3 px-3 py-2 rounded-xl bg-(--bg-secondary) border border-(--bg-quaternary) cursor-pointer hover:border-(--ingenia)/50 transition-all"
+                                aria-label="Logged-in user"
+                        >
+                            <div class="relative w-7 h-7 rounded-lg overflow-hidden border border-(--bg-quaternary) bg-black/20">
+                                <img id="user-head" src="" alt="Player skin" class="w-full h-full object-cover" />
+                            </div>
+                            <div class="hidden sm:block">
+                                <p class="text-[8px] font-black text-(--secondary) uppercase tracking-widest leading-none mb-0.5 opacity-50">
+                                    Logged in as
+                                </p>
+                                <p id="user-name-display" class="text-[11px] font-black text-(--primary) uppercase tracking-tight leading-none"></p>
+                            </div>
+                            <button
+                                    id="logout-btn"
+                                    class="ml-1 p-1 text-(--secondary)"
+                                    title="Logout"
+                                    aria-label="Logout"
+                            >
+                                <LogOut
+                                        width="20px"
+                                        class="group-hover:stroke-red-400 stroke-(--secondary) transition-colors duration-300"
+                                        height="20px"
+                                        aria-hidden="true"
+                                />
+                            </button>
+                        </div>
+
+                        <button
+                                id="login-trigger"
+                                class="flex items-center gap-2 px-4 py-3 rounded-xl bg-(--bg-secondary) border border-(--bg-quaternary) hover:border-(--ingenia)/50 transition-all group"
+                                aria-label="Login with Minecraft username"
+                        >
+                            <div class="w-2 h-2 rounded-full bg-(--ingenia) animate-pulse" aria-hidden="true"></div>
+                            <span class="text-(--secondary) text-[11px] font-black uppercase tracking-widest">Login</span>
+                        </button>
+
+                        <button
+                                id="cart-toggle"
+                                class="hover:border-(--ingenia)/50 relative flex cursor-pointer items-center gap-2 px-4 py-3 rounded-xl bg-(--bg-secondary) border border-(--bg-quaternary) transition-all duration-300 group shadow-lg"
+                                aria-label="Open cart"
+                        >
+                            <div class="relative">
+                                <CartSVG stroke="var(--primary)" width="18px" height="18px" aria-hidden="true" />
+                                <span
+                                        id="cart-count"
+                                        class="hidden absolute -top-2 -left-3 bg-(--ingenia) text-(--bg-primary) text-[9px] font-black w-4 h-4 rounded-full items-center justify-center ring-2 ring-(--bg-secondary)"
+                                        aria-live="polite"
+                                        aria-label="Items in cart"
+                                >
+                                    0
+                                </span>
+                            </div>
+                            <span class="text-(--secondary) text-sm font-black transition-colors hidden sm:inline uppercase tracking-widest">
+                                Cart
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product panels -->
+        <div class="relative overflow-hidden bg-(--bg-primary)">
+            <div id="panels-container" class="flex transition-transform duration-500 ease-in-out">
+                <!-- Ranks panel -->
+                <div id="panel-ranks" class="w-full shrink-0" role="tabpanel" aria-labelledby="tab-ranks">
+                    <div class="container mx-auto px-4 sm:px-6 py-12">
+                        <div class="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
+                            {ranks.map(product => (
+                                    <ProductCard
+                                            product={product}
+                                            isOwned={false}
+                                    />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wands panel -->
+                <div id="panel-wands" class="w-full shrink-0" role="tabpanel" aria-labelledby="tab-wands">
+                    <div class="container mx-auto px-4 sm:px-6 py-12">
+                        <div class="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
+                            {wands.map(product => (
+                                    <ProductCard
+                                            product={product}
+                                            isOwned={false}
+                                    />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trust footer strip -->
+        <div class="bg-(--bg-secondary) border-t border-(--bg-quaternary) py-10">
+            <div class="container mx-auto px-4 sm:px-6">
+                <ul class="flex flex-wrap justify-center gap-x-10 gap-y-4 text-(--secondary) text-[11px] font-black uppercase tracking-widest" role="list">
+                    <li class="flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 bg-(--ingenia) rotate-45" aria-hidden="true"></div>
+                        Secure checkout via Stripe
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 bg-(--ingenia) rotate-45" aria-hidden="true"></div>
+                        Delivered within 5 minutes
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 bg-(--ingenia) rotate-45" aria-hidden="true"></div>
+                        Support on Discord
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Product modals — all rendered without owned state (updated client-side) -->
+        {STORE_PRODUCTS.map(product => (
+                <ProductModal
+                        product={product}
+                        isOwned={false}
+                />
+        ))}
+
+        <!-- Overlays -->
+        <LoginModal />
+        <Cart />
+
+    </div>
+</Layout>
+
+<script>
+    import { openModal, closeModal, OWNED_PRODUCTS_KEY } from "../utils/store-utils";
+    import { restoreSession, restoreSessionSync, registerSessionGlobals } from "../utils/session";
+
+    // Owned product management
+
+    /**
+     * Fetches the set of product IDs the current user already owns from
+     * /api/ownership and updates every "Buy Now" / product modal button on the
+     * page to reflect that state.
+     */
+    async function refreshOwnership(username: string): Promise<void> {
+        if (!username) {
+            applyOwnership(new Set());
+            return;
+        }
+
+        try {
+            const res = await fetch(
+                `/api/ownership?username=${encodeURIComponent(username)}`
+            );
+            if (res.ok) {
+                const data = await res.json() as { ownedProductIds: string[] };
+                const ownedSet = new Set(data.ownedProductIds ?? []);
+                
+                // Cache the result for immediate recovery on next page load
+                localStorage.setItem(OWNED_PRODUCTS_KEY, JSON.stringify(data.ownedProductIds));
+                applyOwnership(ownedSet);
+            }
+        } catch (err) {
+            console.error("[store] Ownership fetch failed:", err);
+        }
+    }
+
+    /**
+     * Updates every owned-state button and modal CTA on the page.
+     * Targets both ProductCard buttons and ProductModal CTAs by product ID.
+     */
+    function applyOwnership(ownedIds: Set<string>): void {
+        document
+            .querySelectorAll<HTMLElement>("[data-product-id]")
+            .forEach((el) => {
+                const productId = el.dataset.productId;
+                if (!productId) return;
+                const owned = ownedIds.has(productId);
+
+                if (el.classList.contains("add-to-cart-btn")) {
+                    (el as HTMLButtonElement).disabled = owned;
+                    el.dataset.owned = String(owned);
+
+                    if (owned) {
+                        el.textContent = "✦ Already Owned";
+                        el.classList.add("bg-(--bg-quaternary)", "text-(--secondary)", "cursor-not-allowed", "opacity-70");
+                        el.classList.remove("bg-(--ingenia)", "text-(--bg-primary)");
+                    } else {
+                        const isModal = el.classList.contains("py-4");
+                        el.textContent = isModal ? "Add to Cart" : "Buy Now";
+                        el.classList.remove("bg-(--bg-quaternary)", "text-(--secondary)", "cursor-not-allowed", "opacity-70");
+                        el.classList.add("bg-(--ingenia)", "text-(--bg-primary)");
+                    }
+                }
+            });
+    }
+
+    // Modal helpers
+
+    (window as any).closeAllModals = () => {
+        document
+            .querySelectorAll<HTMLElement>(
+                ".product-modal:not(.hidden), #login-modal:not(.hidden)"
+            )
+            .forEach((m) => closeModal(m));
+    };
+
+    // Tab switching
+
+    function updateTabIndicator(tab: string | undefined): void {
+        const btn = document.querySelector<HTMLElement>(`.tab-btn[data-tab="${tab}"]`);
+        const indicator = document.getElementById("tab-indicator");
+        if (btn && indicator) {
+            indicator.style.width = btn.offsetWidth + "px";
+            indicator.style.left = btn.offsetLeft + "px";
+        }
+    }
+
+    function switchTab(tab: string | undefined): void {
+        const panels = document.getElementById("panels-container");
+        const index = tab === "ranks" ? 0 : 1;
+
+        document.querySelectorAll<HTMLElement>(".tab-btn").forEach((btn) => {
+            const active = btn.dataset.tab === tab;
+            btn.classList.toggle("active", active);
+            btn.style.color = active ? "black" : "var(--secondary)";
+            btn.setAttribute("aria-selected", String(active));
+        });
+
+        updateTabIndicator(tab);
+        if (panels) panels.style.transform = `translateX(-${index * 100}%)`;
+    }
+
+    // Init
+
+    function fastSync(): void {
+        registerSessionGlobals();
+        (window as any).refreshOwnership = refreshOwnership;
+        
+        const user = restoreSessionSync();
+        if (user) {
+            // Immediately restore ownership from cache
+            try {
+                const cachedOwned = JSON.parse(localStorage.getItem(OWNED_PRODUCTS_KEY) ?? "[]");
+                applyOwnership(new Set(cachedOwned));
+            } catch {}
+            
+            // Background update to ensure cache isn't stale
+            refreshOwnership(user.name);
+        }
+    }
+
+    async function init(): Promise<void> {
+        const user = await restoreSession();
+
+        if (user) {
+            refreshOwnership(user.name);
+        } else {
+            (window as any).openLoginModal?.(true);
+        }
+
+        // Tab setup
+        switchTab("ranks");
+
+        document.querySelectorAll<HTMLElement>(".tab-btn").forEach((btn) =>
+            btn.addEventListener("click", () => switchTab(btn.dataset.tab))
+        );
+
+        const tabContainer = document.querySelector<HTMLElement>(".tab-btn")?.parentElement;
+        if (tabContainer) {
+            new ResizeObserver(() => {
+                const activeTab = document.querySelector<HTMLElement>(".tab-btn.active")?.dataset.tab;
+                if (activeTab) updateTabIndicator(activeTab);
+            }).observe(tabContainer);
+        }
+
+        // Delegated event handling
+        document.addEventListener("click", (e) => {
+            const target = e.target as HTMLElement;
+
+            // Add to cart — gate behind authentication
+            const addBtn = target.closest<HTMLElement>(".add-to-cart-btn");
+            if (addBtn && !addBtn.hasAttribute("disabled")) {
+                const user = (window as any).getCurrentUser?.();
+                if (!user) {
+                    (window as any).openLoginModal?.(true);
+                    return;
+                }
+                (window as any).addToCart?.({
+                    id: addBtn.dataset.productId,
+                    name: addBtn.dataset.productName,
+                    price: addBtn.dataset.productPrice,
+                    stripePriceId: addBtn.dataset.stripePriceId,
+                    image: addBtn.dataset.productImage,
+                });
+                return;
+            }
+
+            // Open product modal
+            const trigger = target.closest<HTMLElement>(".modal-trigger");
+            if (trigger?.dataset.modalId) {
+                openModal(trigger.dataset.modalId);
+                return;
+            }
+
+            // Close product modal via close button
+            const closeBtn = target.closest<HTMLElement>(".modal-close");
+            if (closeBtn) {
+                const modal = closeBtn.closest<HTMLElement>(".product-modal");
+                if (modal) closeModal(modal);
+                return;
+            }
+
+            // Close product modal via backdrop click
+            if (target.classList.contains("modal-backdrop")) {
+                const modal = target.closest<HTMLElement>(".product-modal");
+                if (modal) closeModal(modal);
+            }
+        });
+    }
+
+    fastSync();
+    document.addEventListener("astro:page-load", init);
+</script>
+
+<style>
+    .tab-btn {
+        background: transparent;
+        transition: color 0.3s;
+    }
+
+    @keyframes modal-in {
+        from { opacity: 0; transform: scale(0.96) translateY(20px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes modal-out {
+        from { opacity: 1; transform: scale(1) translateY(0); }
+        to   { opacity: 0; transform: scale(0.96) translateY(20px); }
+    }
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    @keyframes fade-out {
+        from { opacity: 1; }
+        to   { opacity: 0; }
+    }
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-modal-in  { animation: modal-in  0.3s  ease-out forwards; }
+    .animate-modal-out { animation: modal-out 0.25s ease-in  forwards; }
+    .animate-fade-in   { animation: fade-in   0.3s  ease-out forwards; }
+    .animate-fade-out  { animation: fade-out  0.25s ease-in  forwards; }
+
+    .product-card { animation: fade-up 0.5s ease-out both; }
+</style>

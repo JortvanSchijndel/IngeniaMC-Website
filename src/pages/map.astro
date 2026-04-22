@@ -1,0 +1,551 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+import {BLUEMAP_URL} from "../config.ts";
+
+import DayAndNight from "../assets/icons/day-and-night.svg";
+import MapPin from "../assets/icons/map-pin.svg";
+import Cog from "../assets/icons/cog.svg";
+---
+<!-- https://github.com/MidnightTale/bluemap-external-extender -->
+
+<Layout activePage="map">
+    <div class="relative w-full h-screen bg-(--bg-primary)">
+        <!-- Map iframe -->
+        <iframe
+                id="map-frame"
+                src={BLUEMAP_URL}
+                class="w-full h-full"
+                title="IngeniaMC Interactive Map"
+        ></iframe>
+
+        <!-- UI Backdrop -->
+        <div id="ui-backdrop" class="fixed inset-0 z-40 hidden"></div>
+
+        <!-- UI Overlay Container -->
+        <div class="absolute top-18 left-4 right-4 sm:right-6 z-50 pointer-events-none">
+
+            <!-- Controls Grid -->
+            <div class="grid grid-cols-2 sm:flex sm:justify-between gap-y-3 gap-x-3 pointer-events-auto">
+
+                <!-- Group 1: Locations (Row 1 Left) -->
+                <div class="flex items-start order-1">
+                    <button
+                            id="poi-toggle"
+                            class="h-12 bg-(--bg-secondary) px-6 rounded-xl shadow-2xl hover:bg-(--bg-quaternary) transition-all duration-300 flex items-center gap-3 cursor-pointer w-full sm:w-auto justify-center sm:justify-start"
+                    >
+                        <MapPin class="w-4 h-4 scale-120" fill="var(--ingenia)" />
+                        <span class="text-xs font-bold tracking-[0.15em] text-(--primary)">LOCATIONS</span>
+                    </button>
+                </div>
+
+                <!-- Group 2: Players (Row 1 Right Mobile) -->
+                <div class="sm:hidden flex items-start order-2">
+                    <button
+                            id="player-toggle-mobile"
+                            class="h-12 bg-(--bg-secondary) px-5 rounded-xl shadow-2xl hover:bg-(--bg-quaternary) transition-all duration-300 flex items-center gap-3 cursor-pointer w-full justify-center"
+                    >
+                        <div id="p-count-mobile" class="bg-(--ingenia) text-(--bg-primary) text-[12px] font-black px-2.5 py-1 rounded-lg min-w-8 text-center">0</div>
+                        <span class="text-xs font-bold tracking-[0.15em] text-(--primary)">PLAYERS</span>
+                    </button>
+                </div>
+
+                <!-- Group 3: Settings (Row 2 Left Mobile) -->
+                <div class="sm:hidden flex items-start order-3">
+                    <button
+                            id="set-toggle-mobile"
+                            aria-label="Settings"
+                            class="h-12 w-12 bg-(--bg-secondary) rounded-xl shadow-2xl hover:bg-(--bg-quaternary) transition-all duration-300 flex items-center justify-center cursor-pointer gap-3"
+                    >
+                        <Cog class="w-6 h-6" fill="var(--ingenia)" />
+                    </button>
+                </div>
+
+                <!-- Group 4: Desktop Group / DayNight (Row 2 Right Mobile) -->
+                <div class="flex justify-end items-start gap-2 sm:gap-3 order-4 sm:order-2">
+                    <button
+                            id="night-btn"
+                            data-night="false"
+                            class="h-12 w-12 bg-(--bg-secondary) rounded-xl shadow-2xl hover:bg-(--bg-quaternary) transition-all duration-300 flex items-center justify-center text-(--ingenia) cursor-pointer data-[night=true]:text-white"
+                            title="Toggle Day/Night"
+                    >
+                        <DayAndNight class="w-7 h-7" fill="currentColor" />
+                    </button>
+
+                    <!-- Players (Desktop Only) -->
+                    <button
+                            id="player-toggle-desktop"
+                            class="hidden sm:flex h-12 bg-(--bg-secondary) px-5 rounded-xl shadow-2xl hover:bg-(--bg-quaternary) transition-all duration-300 items-center gap-3 cursor-pointer"
+                    >
+                        <div id="p-count-desktop" class="bg-(--ingenia) text-(--bg-primary) text-[12px] font-black px-2.5 py-1 rounded-lg min-w-8 text-center">0</div>
+                        <span class="text-xs font-bold tracking-[0.15em] text-(--primary)">PLAYERS</span>
+                    </button>
+
+                    <!-- Settings (Desktop Only) -->
+                    <button
+                            id="set-toggle-desktop"
+                            class="hidden sm:flex h-12 w-12 bg-(--bg-secondary) rounded-xl shadow-2xl hover:bg-(--bg-quaternary) transition-all duration-300 items-center justify-center cursor-pointer"
+                            title="Settings"
+                    >
+                        <Cog class="w-6 h-6" fill="var(--ingenia)" />
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panels Container -->
+            <div class="mt-3 relative pointer-events-auto">
+                <!-- Locations Box -->
+                <div
+                        id="poi-box"
+                        class="hidden opacity-0 scale-95 transform origin-top-left transition-all duration-300 w-full sm:w-80 max-h-[60vh] sm:max-h-[70vh] bg-(--bg-secondary) rounded-xl shadow-2xl overflow-hidden flex-col absolute left-0 top-0"
+                >
+                    <div class="p-5 border-b border-white/5 flex items-center justify-between shrink-0">
+                        <h3 class="text-sm font-black tracking-[0.2em] text-(--ingenia)">MARKERS</h3>
+                    </div>
+                    <div id="marker-list" class="p-3 space-y-3 overflow-y-auto custom-scrollbar grow">
+                        <p class="text-xs font-medium opacity-40 text-center py-12 tracking-widest text-(--secondary)">LOADING MARKERS...</p>
+                    </div>
+                </div>
+
+                <!-- Player List Panel -->
+                <div
+                        id="player-box"
+                        class="hidden opacity-0 scale-95 transform origin-top-left sm:origin-top-right transition-all duration-300 w-full sm:w-80 max-h-[50vh] bg-(--bg-secondary) rounded-xl shadow-2xl overflow-hidden flex-col absolute left-0 sm:left-auto sm:right-0 top-0"
+                >
+                    <div class="p-6 border-b border-white/5 flex items-center justify-between shrink-0">
+                        <h3 class="text-sm font-black tracking-[0.2em] text-(--ingenia)">ONLINE PLAYERS</h3>
+                    </div>
+                    <div id="p-list" class="p-4 flex flex-col gap-2 overflow-y-auto custom-scrollbar grow">
+                        <p class="p-6 opacity-30 text-center text-xs font-medium tracking-widest text-(--secondary)">NO PLAYERS ONLINE</p>
+                    </div>
+                </div>
+
+                <!-- Settings Panel -->
+                <div
+                        id="set-box"
+                        class="hidden opacity-0 scale-95 transform origin-top-right transition-all duration-300 w-full sm:w-96 max-h-[70vh] bg-(--bg-secondary) rounded-xl shadow-2xl overflow-hidden flex-col absolute right-0 top-0"
+                >
+                    <div class="p-6 border-b border-white/5 flex items-center justify-between shrink-0">
+                        <h3 class="text-sm font-black tracking-[0.2em] text-(--ingenia)">MAP SETTINGS</h3>
+                    </div>
+
+                    <div class="p-6 space-y-8 overflow-y-auto custom-scrollbar grow">
+                        <!-- Performance -->
+                        <div class="space-y-6">
+                            <h4 class="text-[12px] font-black tracking-[0.2em] text-(--secondary)">PERFORMANCE</h4>
+
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-[12px] font-bold text-(--secondary)">
+                                    <span>High Resolution</span>
+                                    <span id="v-hires" class="text-(--ingenia)">500</span>
+                                </div>
+                                <label for="in-hires"></label><input
+                                    id="in-hires"
+                                    type="range"
+                                    min="100"
+                                    max="750"
+                                    value="500"
+                                    class="appearance-none h-1.5 w-full bg-white/5 rounded-full cursor-pointer accent-(--ingenia)"
+                            />
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-[12px] font-bold text-(--secondary)">
+                                    <span>Low Resolution</span>
+                                    <span id="v-lowres" class="text-(--ingenia)">2000</span>
+                                </div>
+                                <label for="in-lowres"></label><input
+                                    id="in-lowres"
+                                    type="range"
+                                    min="500"
+                                    max="2000"
+                                    value="2000"
+                                    class="appearance-none h-1.5 w-full bg-white/5 rounded-full cursor-pointer accent-(--ingenia)"
+                            />
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-[12px] font-bold text-(--secondary)">
+                                    <span>Super Sampling</span>
+                                    <span id="v-ss" class="text-(--ingenia)">1.0</span>
+                                </div>
+                                <label for="in-ss"></label><input
+                                    id="in-ss"
+                                    type="range"
+                                    min="0.5"
+                                    max="2"
+                                    step="0.25"
+                                    value="1"
+                                    class="appearance-none h-1.5 w-full bg-white/5 rounded-full cursor-pointer accent-(--ingenia)"
+                            />
+                            </div>
+                        </div>
+
+                        <div class="h-px bg-white/5"></div>
+
+                        <!-- Lighting -->
+                        <div class="space-y-6">
+                            <h4 class="text-[12px] font-black tracking-[0.2em] text-(--secondary) opacity-60">LIGHTING</h4>
+
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-[12px] font-bold text-(--secondary)">
+                                    <span>Sunlight Strength</span>
+                                    <span id="v-sun" class="text-(--ingenia)">1.0</span>
+                                </div>
+                                <label for="in-sun"></label><input
+                                    id="in-sun"
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.1"
+                                    value="1"
+                                    class="appearance-none h-1.5 w-full bg-white/5 rounded-full cursor-pointer accent-(--ingenia)"
+                            />
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-[12px] font-bold text-(--secondary)">
+                                    <span>Ambient Light</span>
+                                    <span id="v-amb" class="text-(--ingenia)">0.2</span>
+                                </div>
+                                <label for="in-amb"></label><input
+                                    id="in-amb"
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.1"
+                                    value="0.2"
+                                    class="appearance-none h-1.5 w-full bg-white/5 rounded-full cursor-pointer accent-(--ingenia)"
+                            />
+                            </div>
+                        </div>
+
+                        <div class="h-px bg-white/5"></div>
+
+                        <!-- Toggles -->
+                        <div class="space-y-4">
+                            <label class="flex items-center justify-between text-[11px] font-bold text-(--secondary) cursor-pointer hover:text-(--primary) transition-colors">
+                                <span>Pause Tile Loading</span>
+                                <div class="relative inline-flex items-center cursor-pointer">
+                                    <input id="in-pause" type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-white/5 rounded-full peer peer-checked:bg-(--ingenia) after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </div>
+                            </label>
+                            <label class="flex items-center justify-between text-[11px] font-bold text-(--secondary) cursor-pointer hover:text-(--primary) transition-colors">
+                                <span>Show Debug Info</span>
+                                <div class="relative inline-flex items-center cursor-pointer">
+                                    <input id="in-debug" type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-white/5 rounded-full peer peer-checked:bg-(--ingenia) after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="h-px bg-white/5"></div>
+
+                        <!-- Action Buttons -->
+                        <div class="space-y-3 pb-2">
+                            <button
+                                    id="btn-reload"
+                                    class="w-full h-12 bg-(--ingenia)/10 text-(--ingenia) border border-(--ingenia)/20 rounded-xl text-[12px] font-black tracking-widest hover:bg-(--ingenia) hover:text-(--bg-primary) transition-all duration-300 active:scale-95 cursor-pointer"
+                            >
+                                RELOAD MAP
+                            </button>
+                            <button
+                                    id="btn-reset"
+                                    class="w-full h-12 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[12px] font-black tracking-widest hover:bg-red-500 hover:text-white transition-all duration-300 active:scale-95 cursor-pointer"
+                            >
+                                RESET ALL SETTINGS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--bg-quaternary); border-radius: 10px; }
+    </style>
+
+    <script>
+        import { generateBlueMapMarkers } from "../utils/markerTemplates";
+
+        const iframe = document.getElementById('map-frame') as HTMLIFrameElement;
+        const send = (data: any) => iframe?.contentWindow?.postMessage(data, '*');
+        const set = (s: string, v: any) => send({
+            type: 'updateSettings',
+            setting: s,
+            value: typeof v === 'boolean' ? v : (isNaN(v) ? v : parseFloat(v))
+        });
+
+        const boxes = ['poi-box', 'player-box', 'set-box'];
+
+        // Box management
+        const closeBox = (id: string) => {
+            const box = document.getElementById(id);
+            if (box && !box.classList.contains('opacity-0')) {
+                box.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+                const anyOpen = boxes.some(bid => {
+                    if (bid === id) return false;
+                    const b = document.getElementById(bid);
+                    return b && !b.classList.contains('opacity-0');
+                });
+                if (!anyOpen) document.getElementById('ui-backdrop')?.classList.add('hidden');
+
+                setTimeout(() => {
+                    if (box.classList.contains('opacity-0')) {
+                        box.classList.add('hidden');
+                        box.classList.remove('flex');
+                    }
+                }, 300);
+                return true;
+            }
+            return false;
+        };
+
+        const toggle = async (id: string) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            const isOpening = el.classList.contains('opacity-0');
+            const closedAny = boxes.some(closeBox);
+
+            if (isOpening) {
+                if (closedAny) await new Promise(r => setTimeout(r, 310));
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+                el.offsetHeight;
+                el.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                document.getElementById('ui-backdrop')?.classList.remove('hidden');
+            }
+        };
+
+        document.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('#poi-toggle, #player-toggle-desktop, #player-toggle-mobile, #set-toggle-desktop, #set-toggle-mobile')) {
+                boxes.forEach(boxId => {
+                    const box = document.getElementById(boxId);
+                    if (box && !box.contains(target)) closeBox(boxId);
+                });
+            }
+        });
+
+        // Time toggle
+        const toggleTime = () => {
+            const btn = document.getElementById('night-btn');
+            if (!btn) return;
+
+            const isNight = btn.dataset.night === 'true';
+            const newVal = isNight ? 1 : 0;
+            btn.dataset.night = (!isNight).toString();
+
+            send({ type: 'animateSunlightStrength', targetValue: newVal });
+
+            const input = document.getElementById('in-sun') as HTMLInputElement;
+            const text = document.getElementById('v-sun');
+            if (input && text) {
+                input.value = newVal.toString();
+                text.innerText = newVal.toFixed(1);
+            }
+        };
+
+        // Global functions
+        (window as any).teleport = (x: number, y: number, z: number) => {
+            send({ type: 'updatePosition', x, y, z });
+            if (window.innerWidth < 640) closeBox('poi-box');
+        };
+
+        (window as any).followPlayer = (uuid: string) => {
+            send({ type: 'teleportToPlayer', playerId: uuid });
+            send({ type: 'followPlayer', playerId: uuid });
+            if (window.innerWidth < 640) closeBox('player-box');
+        };
+
+        (window as any).toggleMarkerSet = (setId: string) => {
+            send({ type: 'toggleMarkerSet', markerSetId: setId });
+        };
+
+        // Render functions
+        const renderPlayers = (players: any[]) => {
+            const list = document.getElementById('p-list');
+            if (!list) return;
+
+            [document.getElementById('p-count-desktop'), document.getElementById('p-count-mobile')]
+                .forEach(el => el && (el.innerText = players.length.toString()));
+
+            list.innerHTML = players.length ? players.map(p => `
+            <button onclick="window.followPlayer('${p.uuid}')" 
+                class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-left transition-all duration-200 border border-transparent hover:border-white/10 group w-full">
+                <img src="https://mc-heads.net/avatar/${p.uuid}/32" alt="${p.name}"
+                    class="w-8 h-8 rounded-lg shadow-lg flex-shrink-0" loading="lazy"/>
+                <span class="text-xs font-bold text-(--secondary) group-hover:text-(--primary) truncate uppercase transition-colors">${p.name}</span>
+            </button>
+        `).join('') : '<p class="p-6 opacity-30 text-center text-xs font-medium uppercase tracking-widest text-(--secondary)">No players online</p>';
+        };
+
+        const escapeHtml = (text: string) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
+        const renderMarkers = (markers: any) => {
+            const container = document.getElementById('marker-list');
+            if (!container) return;
+
+            if (!markers || Object.keys(markers).length === 0) {
+                container.innerHTML = '<p class="text-xs font-medium opacity-30 text-center py-10 uppercase tracking-widest text-(--secondary)">No markers found</p>';
+                return;
+            }
+
+            const sortByLabel = (a: any, b: any) => {
+                const sortDiff = (a[1].sorting || 0) - (b[1].sorting || 0);
+                return sortDiff !== 0 ? sortDiff : (a[1].label || a[0]).localeCompare(b[1].label || b[0]);
+            };
+
+            const html = Object.entries(markers)
+                .sort(sortByLabel)
+                .map(([setId, setData]: [string, any]) => {
+                    if (!setData.listed) return '';
+
+                    const visibleMarkers = Object.entries(setData.markers || {})
+                        .sort(sortByLabel)
+                        .filter(([_, m]: [string, any]) => m.listed !== false);
+
+                    if (visibleMarkers.length === 0) return '';
+
+                    return `
+                    <div class="space-y-3 bg-white/5 rounded-xl p-3 border border-white/5">
+                        <div class="flex items-center justify-between gap-3 px-1">
+                            <span class="text-[12px] font-black text-(--ingenia) tracking-[0.2em] uppercase opacity-80 flex-1">${escapeHtml(setData.label || setId)}</span>
+                            ${setData.toggleable ? `
+                                <button onclick="window.toggleMarkerSet('${setId}')" 
+                                    class="text-[9px] font-bold px-2 py-1 rounded-md ${setData.visible ? 'bg-(--ingenia)/20 text-(--ingenia)' : 'bg-white/5 text-(--secondary)'} hover:opacity-80 transition-all duration-200">
+                                    ${setData.visible ? 'ON' : 'OFF'}
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="grid grid-cols-1 gap-1">
+                            ${visibleMarkers.map(([markerId, marker]: [string, any]) =>
+                        marker.position ? `
+                                    <button onclick="window.teleport(${marker.position.x}, ${marker.position.y}, ${marker.position.z})"
+                                        class="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/5 text-left transition-all duration-200 group border border-transparent hover:border-white/5">
+                                        <div class="w-1.5 h-1.5 rounded-full ${marker.visible !== false ? 'bg-(--ingenia)' : 'bg-gray-600'}"></div>
+                                        <span class="text-[11px] font-bold text-(--secondary) group-hover:text-(--primary) truncate uppercase transition-colors">${escapeHtml(marker.label || markerId)}</span>
+                                    </button>
+                                ` : ''
+                    ).join('')}
+                        </div>
+                    </div>
+                `;
+                })
+                .filter(Boolean)
+                .join('');
+
+            container.innerHTML = html || '<p class="text-xs font-medium opacity-30 text-center py-10 uppercase tracking-widest text-(--secondary)">No markers found</p>';
+        };
+
+        // Marker state
+        let markersApplied = false;
+
+        // Message handler
+        window.addEventListener('message', (e) => {
+            const { type, players, markers } = e.data || {};
+            
+            // Handle BlueMap ready signals
+            if (type === "markersApplied") markersApplied = true;
+
+            // Initialize if we get ANY signal from the map
+            if (!initialized && type) init();
+
+            if (type === 'playerListUpdate') renderPlayers(typeof players === 'string' ? JSON.parse(players) : players);
+            if (type === 'markerListUpdate') {
+                renderMarkers(typeof markers === 'string' ? JSON.parse(markers) : markers);
+            }
+        });
+
+        // Marker pre-generation
+        let generatedMarkersPromise = generateBlueMapMarkers();
+
+        // Initialization
+        let initialized = false;
+        const init = async () => {
+            if (initialized) return;
+            initialized = true;
+
+            console.log("[Map] Initializing UI and starting marker sync...");
+            
+            send({ type: 'updateTheme', theme: 'dark' });
+            send({ type: 'getPlayerList' });
+            send({ type: 'getMarkers' });
+            
+            ['ui', 'info', 'layers', 'view', 'controls', 'compass', 'playerlist', 'showDebug']
+                .forEach(s => set(s, false));
+
+            const markers = await generatedMarkersPromise;
+            
+            // Persistent retry loop: Try every 2s until success is confirmed
+            const syncMarkers = () => {
+                if (markersApplied) {
+                    console.log("[Map] Markers successfully applied to BlueMap.");
+                    return;
+                }
+                
+                console.log("[Map] Attempting to inject markers...");
+                send({ type: 'updateMarkers', markers });
+                
+                // Also trigger a refresh in case it's needed
+                send({ type: 'getMarkers' }); 
+                
+                setTimeout(syncMarkers, 2000);
+            };
+            
+            syncMarkers();
+        };
+
+        // Fallback: If no message is received, start after load anyway
+        iframe.addEventListener('load', () => {
+            setTimeout(() => { if (!initialized) init(); }, 1000);
+        });
+
+        // Event listeners
+        const addListener = (id: string, event: string, handler: Function) => {
+            document.getElementById(id)?.addEventListener(event, handler as EventListener);
+        };
+
+        addListener('poi-toggle', 'click', () => toggle('poi-box'));
+        addListener('player-toggle-desktop', 'click', () => toggle('player-box'));
+        addListener('player-toggle-mobile', 'click', () => toggle('player-box'));
+        addListener('set-toggle-desktop', 'click', () => toggle('set-box'));
+        addListener('set-toggle-mobile', 'click', () => toggle('set-box'));
+        addListener('night-btn', 'click', toggleTime);
+
+        // Slider listeners
+        const addSlider = (id: string, setting: string, valId: string) => {
+            addListener(id, 'input', (e: Event) => {
+                const val = (e.target as HTMLInputElement).value;
+                set(setting, val);
+                const display = document.getElementById(valId);
+                if (display) display.innerText = val;
+            });
+        };
+
+        addSlider('in-hires', 'hiresDistance', 'v-hires');
+        addSlider('in-lowres', 'lowresDistance', 'v-lowres');
+        addSlider('in-sun', 'sunlightStrength', 'v-sun');
+        addSlider('in-amb', 'ambientLight', 'v-amb');
+        addSlider('in-ss', 'superSampling', 'v-ss');
+
+        addListener('in-pause', 'change', (e: Event) => set('pauseTileLoading', (e.target as HTMLInputElement).checked));
+        addListener('in-debug', 'change', (e: Event) => set('showDebug', (e.target as HTMLInputElement).checked));
+        addListener('btn-reload', 'click', () => send({ type: 'updateMap' }));
+        addListener('btn-reset', 'click', () => { set('resetSettings', true); location.reload(); });
+
+        // Polling
+        setInterval(() => send({ type: 'getPlayerList' }), 5000);
+        setInterval(() => send({ type: 'getMarkers' }), 30000);
+    </script>
+</Layout>

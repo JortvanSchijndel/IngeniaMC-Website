@@ -1,0 +1,108 @@
+---
+import Modal from './Modal.astro';
+
+interface Props {
+    id: string;
+    title: string;
+    description: string;
+    category?: string;
+    videoUrl?: string;
+    trackLength?: string;
+    rideTime?: string;
+    rideType?: string;
+    image?: any;
+}
+
+const { 
+    id, 
+    title, 
+    description, 
+    category, 
+    videoUrl, 
+    trackLength, 
+    rideTime, 
+    rideType
+} = Astro.props;
+---
+
+<Modal id={id} header={title} headerDescription={category} width="max-w-2xl">
+    <div class="flex flex-col gap-6 py-2">
+        <!-- Video Section -->
+        {videoUrl && (
+            <div class="relative aspect-video rounded-2xl overflow-hidden border-2 border-(--bg-tertiary) bg-black group shrink-0 shadow-lg">
+                <iframe 
+                    class="absolute inset-0 w-full h-full"
+                    src={videoUrl} 
+                    title={`${title} On-ride Video`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                ></iframe>
+            </div>
+        )}
+
+        <div class="flex flex-col gap-6">
+            <!-- Description & Info -->
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <h3 class="text-(--ingenia) font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-(--ingenia) rounded-full"></span>
+                        About the ride
+                    </h3>
+                    <p class="text-(--secondary) leading-relaxed text-sm opacity-90">
+                        {description}
+                    </p>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="grid grid-cols-3 gap-2">
+                    {trackLength && (
+                        <div class="bg-(--bg-tertiary)/50 p-2.5 rounded-xl border border-white/5 flex flex-col items-center text-center">
+                            <p class="text-(--secondary) text-[8px] uppercase font-black tracking-widest mb-0.5 opacity-50">Length</p>
+                            <p class="text-white font-bold text-xs">{trackLength}</p>
+                        </div>
+                    )}
+                    {rideTime && (
+                        <div class="bg-(--bg-tertiary)/50 p-2.5 rounded-xl border border-white/5 flex flex-col items-center text-center">
+                            <p class="text-(--secondary) text-[8px] uppercase font-black tracking-widest mb-0.5 opacity-50">Time</p>
+                            <p class="text-white font-bold text-xs">{rideTime}</p>
+                        </div>
+                    )}
+                    {rideType && (
+                        <div class="bg-(--bg-tertiary)/50 p-2.5 rounded-xl border border-white/5 flex flex-col items-center text-center">
+                            <p class="text-(--secondary) text-[8px] uppercase font-black tracking-widest mb-0.5 opacity-50">Type</p>
+                            <p class="text-white font-bold text-xs">{rideType}</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <!-- Leaderboard Placeholder -->
+            <div class="space-y-3">
+                <h3 class="text-(--ingenia) font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-(--ingenia) rounded-full"></span>
+                    Leaderboard
+                </h3>
+                
+                <div class="relative rounded-2xl border-2 border-dashed border-(--bg-tertiary) flex items-center justify-center overflow-hidden bg-(--bg-tertiary)/20 py-10 px-6">
+                    <!-- Fake content to be blurred -->
+                    <div class="absolute inset-0 flex flex-col gap-2 p-4 opacity-5 grayscale blur-[2px]">
+                         {[...Array(3)].map((_) => (
+                            <div class="h-6 bg-white/20 rounded flex items-center px-4 justify-between">
+                                <div class="w-24 h-1.5 bg-white/30 rounded-full"></div>
+                                <div class="w-10 h-1.5 bg-white/30 rounded-full"></div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <!-- Coming Soon Overlay -->
+                    <div class="relative z-10 text-center">
+                        <div class="bg-(--bg-secondary)/90 backdrop-blur-xl py-2 px-6 rounded-2xl border border-white/10 shadow-2xl">
+                            <p class="text-white font-black text-lg uppercase italic tracking-tighter leading-none">Coming Soon!</p>
+                            <p class="text-(--ingenia) font-mono text-[10px] mt-1 font-bold">#cvsoon</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</Modal>

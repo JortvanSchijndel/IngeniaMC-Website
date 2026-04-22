@@ -1,0 +1,372 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { SERVER_IP, DISCORD_URL, TEAM_MEMBERS } from "../config";
+
+import { Image } from 'astro:assets';
+import AboutPerson from "../assets/images/avontuuriergamer_waving.png";
+import MagicVillage from "../assets/images/magic_village.png";
+
+import Discord from "../assets/icons/discord.svg";
+import Minecraft from "../assets/icons/minecraft.svg";
+import Copy from "../assets/icons/copy.svg";
+import ExternalLink from "../assets/icons/external-link.svg"
+---
+
+<Layout activePage="home">
+    <!-- Hero Section -->
+    <section id="header" class="relative h-[94vh] flex items-center justify-center overflow-hidden">
+        <!-- Background Image with Overlay -->
+        <div class="absolute inset-0 z-0">
+            <div class="absolute inset-0 bg-black/40 z-5"></div>
+            <Image
+                    src={MagicVillage}
+                    alt="Magic Village"
+                    class="w-full h-full object-cover scale-105 blur-xs"
+                    loading="eager"
+                    fetchpriority="high"
+            />
+            <!-- Bottom fade overlay to transition into the next section -->
+            <div class="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-(--bg-secondary) to-transparent z-20"></div>
+        </div>
+
+        <div class="container mx-auto px-6 relative z-30 flex flex-col items-center text-center -mt-10 md:-mt-20">
+            <div class="space-y-6 mb-16">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-4">
+                    <p class="text-(--primary) uppercase tracking-[0.4em] font-bold text-[10px] md:text-xs">Minecraft Theme Park</p>
+                </div>
+
+                <h1 class="text-(--ingenia) uppercase text-6xl md:text-9xl font-black tracking-tighter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] leading-none">
+                    IngeniaMC
+                </h1>
+
+                <p class="text-(--primary) text-xl md:text-2xl font-medium max-w-2xl mx-auto opacity-90 italic leading-relaxed drop-shadow-lg">
+                    "A Minecraft Theme Park with a story..."
+                </p>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center gap-4 mb-16">
+                <!-- Copy IP Button -->
+                <button
+                        onclick="copyIP(this)"
+                        class="group bg-black/40 w-82.5 backdrop-blur-md border border-white/10 pl-6 pr-20 py-4 rounded-2xl flex items-center gap-4 hover:bg-black/60 transition-all duration-300 active:scale-95 cursor-pointer relative"
+                >
+                    <div class="flex items-center justify-center w-11 h-11 bg-(--ingenia)/10 rounded-xl group-hover:scale-110 transition-transform shrink-0">
+                        <Minecraft width={22} height={22} fill="var(--ingenia)" />
+                    </div>
+                    <div class="text-left flex flex-col gap-1">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <p class="text-[9px] font-bold text-(--secondary) tracking-widest uppercase opacity-60 leading-none">IP Address</p>
+                            <div class="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">
+                                <div class="w-1 h-1 rounded-full bg-green-500 animate-pulse"></div>
+                                <span class="text-[8px] font-bold text-green-500 uppercase tracking-tighter leading-none"><span class="minecraft-online-players">...</span> ONLINE</span>
+                            </div>
+                        </div>
+                        <p id="hero-ip-text" class="text-lg font-bold text-(--primary) font-[minecraft] tracking-wide leading-none">{SERVER_IP}</p>
+                    </div>
+                    <div class="absolute right-6 top-1/2 -translate-y-1/2 flex items-center justify-center w-9 h-9 p-1.5 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors">
+                        <Copy width={36} height={36} fill="white" />
+                    </div>
+                </button>
+
+                <!-- Discord Button -->
+                <a
+                        href={DISCORD_URL}
+                        target="_blank"
+                        class="group bg-black/40 w-82.5 backdrop-blur-md border border-white/10 pl-6 pr-20 py-4 rounded-2xl flex items-center gap-4 hover:bg-black/60 transition-all duration-300 active:scale-95 relative"
+                >
+                    <div class="flex items-center justify-center w-11 h-11 bg-(--discord)/10 rounded-xl group-hover:scale-110 transition-transform shrink-0">
+                        <Discord width={22} height={22} fill="var(--discord)" />
+                    </div>
+                    <div class="text-left flex flex-col gap-1">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <p class="text-[9px] font-bold text-(--secondary) tracking-widest uppercase opacity-60 leading-none">Community</p>
+                            <div class="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-(--discord)/10 border border-(--discord)/20">
+                                <div class="w-1 h-1 rounded-full bg-(--discord) animate-pulse"></div>
+                                <span class="text-[8px] font-bold text-(--discord) uppercase tracking-tighter leading-none"><span class="discord-online-users">...</span> ONLINE</span>
+                            </div>
+                        </div>
+                        <p class="text-lg font-bold text-(--primary) tracking-tight leading-none">Join the Discord!</p>
+                    </div>
+                    <div class="absolute right-6 top-1/2 -translate-y-1/2 flex items-center justify-center w-9 h-9 p-1.5 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors">
+                        <ExternalLink width={36} height={36} stroke="white" />
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <a href="#about" class="absolute bottom-15 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-3 transition-all hover:translate-y-1 opacity-60 hover:opacity-100 group">
+            <span class="text-[10px] uppercase font-black tracking-[0.4em] text-(--secondary) group-hover:text-(--primary) transition-colors">Discover More</span>
+            <div class="w-6 h-10 border-2 border-(--secondary) rounded-full flex justify-center p-1.5 group-hover:border-(--primary) transition-colors">
+                <div class="w-1 h-2 bg-(--secondary) rounded-full animate-bounce group-hover:bg-(--primary)"></div>
+            </div>
+        </a>
+    </section>
+
+    <!-- Section 1: Who we are -->
+    <section id="about" class="py-24 bg-(--bg-secondary) group border-b border-(--bg-quaternary)">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row items-center gap-8 xl:gap-48">
+                <div class="flex-1 space-y-8">
+                    <div class="relative inline-block">
+                        <h2 class="text-4xl font-bold text-(--primary)">Who we are?</h2>
+                        <div class="absolute -bottom-3 left-0 w-16 h-1 bg-(--ingenia) rounded-full"></div>
+                    </div>
+
+                    <p class="text-(--secondary) text-lg leading-relaxed">
+                        Welcome to IngeniaMC, a Theme Park with a story... We are a passionate
+                        team of Minecraft enthusiasts working on a unique and magical theme park
+                        experience within the virtual world of the most popular block game.
+                        <br><br>
+                        At IngeniaMC, our mission is to provide players with an immersive
+                        and entertaining theme park that goes beyond the ordinary. We combine our
+                        talents and love for gaming to deliver a stunning adventure for all Minecraft players.
+                    </p>
+                </div>
+
+                <div class="flex-1 relative">
+                    <div class="absolute -inset-4 bg-(--ingenia)/20 blur-3xl rounded-full opacity-0 hover:opacity-100 transition-opacity duration-700"></div>
+                    <div class="relative z-10 flex justify-center lg:justify-end">
+                        <Image
+                                src={AboutPerson}
+                                alt="AvontuurierGamer waving"
+                                class="max-h-100 w-auto animate-float group-hover:scale-102 group-hover:rotate-3 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-transform duration-700"
+                        />
+                        <div class="absolute right-0 bottom-4 w-4/5 h-4/5 bg-(--ingenia) rounded-[40px_4px] -z-10 transform rotate-3 scale-95 opacity-50"></div>
+                        <div class="absolute right-0 bottom-0 w-4/5 h-4/5 bg-(--ingenia) rounded-[40px_4px] -z-20"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Project IngeniaMC -->
+    <section id="project-ingeniamc" class="py-24 bg-(--bg-tertiary) group border-b border-(--bg-quaternary)">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row items-center gap-8">
+                <div class="max-w-162.5 overflow-hidden rounded-3xl border border-white/5 shadow-2xl order-2 lg:order-1">
+                    <Image
+                            src={MagicVillage}
+                            alt="Project IngeniaMC"
+                            class="object-cover group-hover:scale-105 group-hover:-rotate-2 transition-transform duration-700"
+                    />
+                </div>
+
+                <div class="flex-1 space-y-6 order-1 lg:order-2">
+                    <div class="relative inline-block">
+                        <h2 class="text-3xl md:text-4xl font-bold text-(--primary)">Project IngeniaMC</h2>
+                        <div class="absolute -bottom-3 left-0 w-16 h-1 bg-(--ingenia) rounded-full"></div>
+                    </div>
+                    <p class="text-(--secondary) text-lg leading-relaxed">
+                        Project IngeniaMC originally started from the Minecraft server MiniBuildCraft.
+                        The first version was a theme park created by M64DiamondStar in 2018.
+                        After evolving into a minigame server, we realized our true passion stayed with
+                        theme parks. Together with AvontuurierGamer, we embarked on this new journey.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Bundle Parks -->
+    <section id="bundle-parks" class="py-24 bg-(--bg-secondary) group border-b border-(--bg-quaternary)">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row items-center gap-8 xl:gap-48">
+                <div class="flex-1 space-y-8">
+                    <div class="relative inline-block">
+                        <h2 class="text-4xl font-bold text-(--primary)">Part of Bundle Parks</h2>
+                        <div class="absolute -bottom-3 left-0 w-16 h-1 bg-(--ingenia) rounded-full"></div>
+                    </div>
+
+                    <p class="text-(--secondary) text-lg leading-relaxed">
+                        Bundle Parks is cool :thumbs_up:
+                        <br><br>
+                        Super cool
+                    </p>
+                </div>
+                <div class="max-w-162.5 overflow-hidden rounded-3xl border border-white/5 shadow-2xl order-2 lg:order-1">
+                        <Image
+                                src={MagicVillage}
+                                alt="Project IngeniaMC"
+                                class="object-cover group-hover:scale-105 group-hover:rotate-2 transition-transform duration-700"
+                        />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Team Section -->
+    <section id="team" class="py-20 bg-(--bg-tertiary) border-b border-(--bg-quaternary)">
+        <div class="container mx-auto px-6">
+            <div class="text-center relative inline-block mb-16 left-1/2 -translate-x-1/2">
+                <h2 class="text-4xl md:text-5xl font-bold text-(--primary)">Our <span class="text-(--ingenia)">Team</span></h2>
+                <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-1.5 bg-(--ingenia) rounded-full"></div>
+            </div>
+
+            <div class="space-y-16">
+                <!-- Leaders -->
+                <div>
+                    <h3 class="text-sm font-black text-(--primary) tracking-[0.4em] mb-10 text-center uppercase opacity-60">Management</h3>
+                    <div class="grid grid-cols-2 lg:flex lg:flex-wrap justify-center gap-4">
+                        {TEAM_MEMBERS.leaders.map(member => (
+                                <div class="group relative bg-(--bg-primary)/40 p-3 md:p-8 rounded-2xl border border-white/5 backdrop-blur-sm hover:border-white/20 transition-all duration-500 shadow-xl overflow-hidden text-center w-full lg:w-70">
+                                    <div class="relative mb-4 md:mb-6">
+                                        <Image
+                                                src={`https://vzge.me/bust/256/${member.name}.png?no=ears,cape`}
+                                                alt={member.name}
+                                                width={256}
+                                                height={256}
+                                                class="w-20 h-20 md:w-28 md:h-28 mx-auto relative z-10 drop-shadow-[0_15px_15px_rgba(0,0,0,0.5)] group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500"
+                                        />
+                                    </div>
+                                    <h4 class={`font-bold text-(--primary) mb-2 md:mb-3 tracking-tight wrap-break-word ${member.name.length > 13 ? 'text-sm md:text-lg' : 'text-lg md:text-xl'}`}>{member.name}</h4>
+                                    <span
+                                            class="inline-block px-3 md:px-5 py-1 md:py-1.5 rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white"
+                                            style={`background: ${member.color}44; border: 1px solid ${member.color}66;`}
+                                    >
+                                    {member.rank}
+                                </span>
+                                </div>
+                        ))}
+                    </div>
+                </div>
+
+                <!-- Staff -->
+                <div>
+                    <h3 class="text-sm font-black text-(--primary) tracking-[0.4em] mb-10 text-center uppercase opacity-60">The Crew</h3>
+                    <div class="grid grid-cols-2 lg:flex lg:flex-wrap justify-center gap-4">
+                        {TEAM_MEMBERS.staff.map(member => (
+                                <div class="group bg-(--bg-primary)/30 p-3 md:p-8 rounded-2xl border border-white/5 backdrop-blur-sm hover:-translate-y-1 hover:border-white/20 transition-all duration-300 text-center w-full lg:w-70">
+                                    <Image
+                                            src={`https://vzge.me/bust/256/${member.name}.png?no=ears,cape`}
+                                            alt={member.name}
+                                            width={256}
+                                            height={256}
+                                            class="w-20 h-20 md:w-28 md:h-28 mx-auto mb-4 md:mb-5 drop-shadow-xl group-hover:scale-105 transition-transform"
+                                    />
+                                    <h4 class={`font-bold text-(--primary) mb-2 md:mb-3 tracking-tight wrap-break-word ${member.name.length > 13 ? 'text-sm md:text-lg' : 'text-lg md:text-xl'}`}>{member.name}</h4>
+                                    <span
+                                            class="inline-block px-3 md:px-5 py-1 md:py-1.5 rounded-md text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white"
+                                            style={`background: ${member.color}44; border: 1px solid ${member.color}66;`}
+                                    >
+                                    {member.rank}
+                                </span>
+                                </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Discord CTA -->
+    <section id="discord" class="relative py-20 overflow-hidden">
+        <!-- Background Image Container -->
+        <div class="absolute inset-0 z-0">
+            <div class="absolute inset-0 bg-black/60 z-10"></div>
+            <Image
+                    src={MagicVillage}
+                    alt="Magic Village"
+                    class="w-full h-full object-cover scale-105 blur-xs"
+            />
+        </div>
+
+        <div class="container mx-auto px-6 text-center space-y-10 relative z-20">
+            <div class="space-y-4">
+                <h2 class="text-3xl md:text-4xl font-bold text-(--primary)">Join our <span class="text-(--ingenia)">Community</span></h2>
+                <p class="text-(--secondary) text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                    Stay up to date with the latest news, events, and sneak peeks. Join hundreds of other players on our Discord server!
+                </p>
+            </div>
+            
+            <a 
+                href={DISCORD_URL} 
+                target="_blank" 
+                class="inline-flex items-center gap-3 bg-(--discord) hover:brightness-110 text-(--primary) font-bold px-8 py-3 rounded-xl transition-all duration-300 shadow-xl shadow-(--discord)/20 active:scale-95 group"
+            >
+                <div class="flex items-center justify-center bg-white/20 rounded-lg p-2 group-hover:scale-110 transition-transform w-9 h-9">
+                    <Discord width={20} height={20} fill="white" />
+                </div>
+                <span class="text-base uppercase tracking-wider">Join Discord Community</span>
+            </a>
+        </div>
+    </section>
+</Layout>
+
+<script>
+    import { SERVER_IP, DISCORD_SERVER_ID } from "../config";
+
+    const getDiscordOnlineUsers = async () => {
+        try {
+            const apiWidgetUrl = `https://discord.com/api/guilds/${DISCORD_SERVER_ID}/widget.json`;
+            let response = await fetch(apiWidgetUrl);
+            let data: { presence_count?: number } = await response.json();
+
+            return data.presence_count ?? 0;
+        } catch (e) {
+            console.error('Error fetching Discord stats:', e);
+            return 0;
+        }
+    }
+
+    const getMinecraftOnlinePlayer = async () => {
+        try {
+            const apiUrl = `https://api.mcsrvstat.us/2/${SERVER_IP}`;
+            let response = await fetch(apiUrl);
+            let data: { players?: { online?: number } } = await response.json();
+
+            return data.players?.online ?? 0;
+        } catch (e) {
+            console.error('Error fetching Minecraft stats:', e);
+            return 0;
+        }
+    }
+
+    const updateStats = async () => {
+        const [mcCount, discordCount] = await Promise.all([
+            getMinecraftOnlinePlayer(),
+            getDiscordOnlineUsers()
+        ]);
+
+        const playersElements = document.querySelectorAll('.minecraft-online-players');
+        playersElements.forEach(el => {
+            if (el) el.textContent = mcCount.toString();
+        });
+
+        const discordElements = document.querySelectorAll('.discord-online-users');
+        discordElements.forEach(el => {
+            if (el) el.textContent = discordCount.toString();
+        });
+    };
+
+    const copyIP = async (el: HTMLElement) => {
+        try {
+            await navigator.clipboard.writeText(SERVER_IP);
+            const text = el.querySelector('#hero-ip-text') as HTMLElement;
+
+            if (text) {
+                const originalText = text.innerText;
+                const originalWidth = el.getBoundingClientRect().width;
+
+                // Lock the width to prevent resizing
+                el.style.width = `${originalWidth}px`;
+                text.innerText = "IP COPIED!";
+
+                setTimeout(() => {
+                    text.innerText = originalText;
+                    // Reset the width after reverting text
+                    el.style.width = '';
+                }, 2000);
+            }
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    }
+
+    // Expose copyIP to global scope
+    (window as any).copyIP = copyIP;
+
+    updateStats();
+
+    document.addEventListener('astro:page-load', updateStats);
+</script>

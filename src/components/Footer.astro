@@ -1,0 +1,28 @@
+---
+import {COPYRIGHT_DATE, DISCORD_URL, YOUTUBE_URL, INSTA_URL, TIKTOK_URL} from "../config.ts";
+
+import Discord from "../assets/icons/discord.svg";
+import Insta from "../assets/icons/insta.svg";
+import Youtube from "../assets/icons/youtube.svg";
+import Tiktok from "../assets/icons/tiktok.svg";
+---
+
+<footer class="w-full bg-(--bg-secondary) shadow-md border-t-2 border-(--bg-secondary) py-10 md:py-2 px-10">
+        <div class="flex flex-col md:flex-row gap-10 md:gap-5 items-center justify-between">
+            <div class="flex-col md:flex-row items-center gap-1 md:gap-3 w-1/3 hidden md:flex">
+                <h1 class="relative bottom-0.5 text-2xl font-bold text-(--primary)">IngeniaMC</h1>
+                <p class="hidden md:block text-(--secondary)">•</p>
+                <p class="text-(--secondary)">A Theme Park with a Story</p>
+            </div>
+            <div class="w-full md:w-1/3">
+                <p class="w-full items-center text-center mb-2 text-2xl text-white font-bold">Follow Us!</p>
+                <div class="flex gap-4 w-full items-center justify-center mb-4 mt-0 px-5">
+                    <a class="p-4 w-12 h-12 bg-(--bg-tertiary) rounded-lg hover:bg-(--bg-quaternary) transition-colors duration-300 flex items-center justify-center" target="_blank" href={DISCORD_URL}><Discord width={24} height={24} fill="white" class="scale-130"/></a>
+                    <a class="p-4 w-12 h-12 bg-(--bg-tertiary) rounded-lg hover:bg-(--bg-quaternary) transition-colors duration-300 flex items-center justify-center" target="_blank" href={INSTA_URL}><Insta width={24} height={24} fill="white" class="scale-130"/></a>
+                    <a class="p-4 w-12 h-12 bg-(--bg-tertiary) rounded-lg hover:bg-(--bg-quaternary) transition-colors duration-300 flex items-center justify-center" target="_blank" href={YOUTUBE_URL}><Youtube width={24} height={24} fill="white" class="scale-140"/></a>
+                    <a class="p-4 w-12 h-12 bg-(--bg-tertiary) rounded-lg hover:bg-(--bg-quaternary) transition-colors duration-300 flex items-center justify-center" target="_blank" href={TIKTOK_URL}><Tiktok width={24} height={24} fill="white" class="scale-130"/></a>
+                </div>
+            </div>
+            <p class="w-full md:w-1/3 text-(--secondary) my-2 text-center md:text-right">© {COPYRIGHT_DATE} All Rights Reserved</p>
+        </div>
+</footer>

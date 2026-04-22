@@ -1,0 +1,120 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { Image } from 'astro:assets';
+import { attractions } from "../config";
+import MagicVillage from "../assets/images/magic_village.png";
+import AttractionModal from "../components/AttractionModal.astro";
+
+const ridesOnly = attractions.filter(attraction => attraction.type === 'ride');
+---
+
+<Layout activePage="attractions">
+    <div class="bg-(--bg-primary) min-h-screen">
+        <!-- Header Section -->
+        <section class="relative h-[50vh] flex items-center justify-center overflow-hidden">
+            <div class="absolute inset-0 z-0">
+                <div class="absolute inset-0 bg-black/50 z-10"></div>
+                <Image
+                    src={MagicVillage}
+                    alt="Attractions Header"
+                    class="w-full h-full object-cover scale-105 blur-sm"
+                    loading="eager"
+                />
+                <div class="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-(--bg-primary) to-transparent z-20"></div>
+            </div>
+
+            <div class="container mx-auto px-6 relative z-30 text-center">
+                <h1 class="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter mb-4 drop-shadow-2xl">
+                    Check the <span class="text-(--ingenia)">Rides</span>
+                </h1>
+                <p class="text-(--secondary) text-xl md:text-2xl font-medium italic opacity-90">
+                    List of all the attractions in the park.
+                </p>
+            </div>
+        </section>
+
+        <!-- Intro Text -->
+        <section class="py-16 bg-(--bg-primary)">
+            <div class="container mx-auto px-6 text-center max-w-4xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 relative inline-block">
+                    A unique and stunning experience
+                    <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-24 h-1 bg-(--ingenia) rounded-full"></div>
+                </h2>
+                <p class="text-(--secondary) text-lg md:text-xl leading-relaxed mt-8">
+                    Experience our broad range of spectacular rides! Go into a thrilling drop tower between magical dragons, ride in the depths of Pyraculus or race through the vines of Vina Tropica!
+                </p>
+            </div>
+        </section>
+
+        <!-- Rides Grid -->
+        <section class="pb-32 px-6">
+            <div class="container mx-auto max-w-6xl">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                    {ridesOnly.map((ride) => (
+                        <div class="group relative bg-(--bg-secondary) rounded-2xl overflow-hidden border border-white/5 hover:border-(--secondary)/30 transition-all duration-500 shadow-2xl flex flex-col w-full max-w-95">
+                            <!-- Image Container -->
+                            <div class="relative h-60 overflow-hidden">
+                                <Image
+                                    src={ride.image}
+                                    alt={ride.title}
+                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                                <div class="absolute inset-0 bg-linear-to-t from-(--bg-secondary) via-transparent to-transparent opacity-60"></div>
+                                <div class="absolute bottom-4 left-6">
+                                    <p class="text-(--ingenia) text-xs font-black uppercase tracking-[0.2em] mb-1 drop-shadow-md">
+                                        {ride.subcategory}
+                                    </p>
+                                    <h3 class="text-2xl font-bold text-white tracking-tight drop-shadow-md">
+                                        {ride.title}
+                                    </h3>
+                                </div>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="p-8 flex flex-col flex-1">
+                                <p class="text-(--secondary) text-sm leading-relaxed mb-8 flex-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    {ride.description}
+                                </p>
+                                
+                                <button 
+                                    onclick={`window.openModal('modal-${ride.id}')`}
+                                    class="w-full py-3.5 px-6 bg-white/5 border border-white/10 rounded-xl text-white font-bold text-xs uppercase tracking-widest hover:bg-(--ingenia) hover:border-(--ingenia) hover:text-(--bg-primary) transition-all duration-300 active:scale-95 cursor-pointer"
+                                >
+                                    View more!
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Attraction Modals (Moved to modal slot) -->
+    {ridesOnly.map((ride) => (
+        <div slot="modals">
+            <AttractionModal 
+                id={`modal-${ride.id}`}
+                title={ride.title}
+                category={ride.category}
+                description={ride.description}
+                videoUrl={ride.videoUrl}
+                trackLength={ride.trackLength}
+                rideTime={ride.rideTime}
+                rideType={ride.subcategory}
+                image={ride.image}
+            />
+        </div>
+    ))}
+
+    <script is:inline>
+        document.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const attraction = params.get("attraction");
+
+            if (attraction) {
+                window.openModal(`modal-${attraction}`);
+            }
+        });
+    </script>
+</Layout>

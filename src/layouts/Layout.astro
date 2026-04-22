@@ -1,0 +1,67 @@
+---
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import '../styles/global.css'
+import { fade, ClientRouter } from 'astro:transitions';
+
+import {DOMAIN, SNOW_CONFIG} from "../config.ts";
+
+interface Props {
+    activePage?: string;
+}
+
+const { activePage } = Astro.props;
+
+// Disable snow on the store page
+const isSnowAllowed = activePage !== "store";
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+    <title>IngeniaMC - Minecraft Theme Park</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="og:title" content="IngeniaMC">
+    <meta name="description" content="IngeniaMC is a Minecraft theme park focused on delivering every visitor a magical experience. Join now at: play.IngeniaMC.org">
+    <meta property="og:image" content={DOMAIN + "/favicon.png"}/>
+    <meta name="og:type" content="website">
+
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <meta name="generator" content={Astro.generator} />
+    <ClientRouter />
+</head>
+
+<body class="bg-main min-h-screen flex flex-col" transition:animate="none">
+    <Navbar activePage={activePage} />
+
+    <main class="flex-1" transition:animate={fade({ duration: "0.4s" })}>
+        <slot />
+    </main>
+
+    <slot name="modals" />
+
+    {activePage !== "map" && activePage !== "socials" && <Footer />}
+
+    {isSnowAllowed && (
+        <script is:inline src="/src/utils/snow.js"></script>
+        <script is:inline define:vars={{ SNOW_CONFIG }}>
+            const initSnow = () => {
+                if (window.snow) {
+                    window.snow.start(SNOW_CONFIG);
+                }
+            };
+
+            if (document.readyState === 'complete') {
+                initSnow();
+            } else {
+                window.addEventListener('load', initSnow);
+            }
+            
+            document.addEventListener('astro:after-swap', initSnow);
+        </script>
+    )}
+</body>
+</html>

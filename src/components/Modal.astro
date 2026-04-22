@@ -1,0 +1,187 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+    id: string;
+    header?: string;
+    headerIcon?: any;
+    headerIconClass?: string;
+    headerDescription?: string;
+    width?: string;
+    height?: string;
+    closeButton?: boolean;
+    closeX?: boolean;
+}
+
+const {
+    id,
+    header,
+    headerIcon,
+    headerIconClass = 'w-8 h-8',
+    headerDescription,
+    width = 'max-w-lg',
+    height = 'h-auto',
+    closeButton = true,
+    closeX = true,
+} = Astro.props;
+
+const isComponent = typeof headerIcon === 'function' || (typeof headerIcon === 'object' && headerIcon !== null && 'name' in headerIcon);
+const isImageObject = typeof headerIcon === 'object' && headerIcon !== null && 'src' in headerIcon;
+const HeaderIconComponent = isComponent ? headerIcon : null;
+---
+
+<div id={id} 
+     class="fixed inset-0 z-999 flex items-center justify-center invisible"
+     aria-hidden="true" 
+     role="dialog"
+     data-modal-id={id}
+>
+    <!-- Backdrop -->
+    <div class="modal-backdrop absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-300" 
+         onclick={`closeModal('${id}')`}>
+    </div>
+
+    <!-- Modal Content -->
+    <div class={`relative z-10 rounded-lg bg-(--bg-secondary) shadow-2xl transform transition-all duration-300 scale-95 opacity-0 modal-content overflow-hidden flex flex-col mx-6 w-full ${width} ${height}`}
+         style="max-height: 90vh;">
+        
+        {(header || closeX) && (
+            <header class="border-b-2 border-(--bg-tertiary) p-4 flex items-start justify-between gap-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    {headerIcon &&
+                        <div class="shadow-xs shadow-(color:--bg-tertiary) border-2 border-(--bg-tertiary) rounded-lg p-2 bg-(--bg-secondary) overflow-hidden">
+                            {typeof headerIcon === 'string' ? (
+                                <img src={headerIcon} class={headerIconClass} alt="icon" />
+                            ) : isImageObject ? (
+                                <Image src={headerIcon} class={headerIconClass} alt="icon" />
+                            ) : HeaderIconComponent ? (
+                                <HeaderIconComponent class={headerIconClass} />
+                            ) : null}
+                        </div>
+                    }
+                    <div>
+                        {header && <h1 class="text-(--ingenia) text-[25px] font-bold leading-tight" aria-label={header}>{header}</h1>}
+                        {headerDescription && <p class="text-(--secondary) text-[13px]">{headerDescription}</p>}
+                    </div>
+                </div>
+                {closeX && (
+                        <button onclick={`closeModal('${id}')`} class="ml-auto text-(--secondary) hover:text-(--primary) transition-colors cursor-pointer p-1 rounded-md hover:bg-(--bg-tertiary)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                )}
+            </header>
+        )}
+
+        <main class="p-4 overflow-y-auto grow custom-scrollbar">
+            <slot />
+        </main>
+
+        {closeButton && (
+            <footer class="p-4 border-t-2 border-(--bg-tertiary) mt-auto shrink-0 flex justify-end gap-2 bg-(--bg-secondary)">
+                <slot name="buttons" />
+                <button onclick={`closeModal('${id}')`} class="bg-(--bg-tertiary) hover:bg-(--bg-tertiary)/80 text-(--primary) font-bold cursor-pointer py-2 px-4 rounded-lg transition-colors">
+                    Close
+                </button>
+            </footer>
+        )}
+    </div>
+</div>
+
+<script is:inline>
+    // Initialize modal system
+    if (!window.modalSystemInitialized) {
+        window.modalSystemInitialized = true;
+
+        window.openModal = function(id) {
+            const modal = document.getElementById(id);
+            if (!modal) {
+                console.error(`Modal with id "${id}" not found`);
+                return;
+            }
+            
+            // Show modal container
+            modal.classList.remove('invisible');
+            modal.classList.add('visible');
+            
+            // Animate content and backdrop
+            const content = modal.querySelector('.modal-content');
+            const backdrop = modal.querySelector('.modal-backdrop');
+            
+            // Use requestAnimationFrame to ensure the transition happens after the display property change
+            requestAnimationFrame(() => {
+                if (content) {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }
+                if (backdrop) {
+                    backdrop.classList.remove('opacity-0');
+                    backdrop.classList.add('opacity-100');
+                }
+            });
+            
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeModal = function(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+
+            const content = modal.querySelector('.modal-content');
+            const backdrop = modal.querySelector('.modal-backdrop');
+
+            if (content) {
+                content.classList.remove('scale-100', 'opacity-100');
+                content.classList.add('scale-95', 'opacity-0');
+            }
+            
+            if (backdrop) {
+                backdrop.classList.remove('opacity-100');
+                backdrop.classList.add('opacity-0');
+            }
+            
+            // Wait for transition to complete
+            setTimeout(() => {
+                modal.classList.remove('visible');
+                modal.classList.add('invisible');
+                
+                // Only enable scrolling if no other modals are open
+                const openModals = document.querySelectorAll('[role="dialog"].visible');
+                if (openModals.length === 0) {
+                    document.body.style.overflow = '';
+                }
+            }, 300);
+        };
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const visibleModals = Array.from(document.querySelectorAll('[role="dialog"].visible'));
+                // Close the top-most modal (last one in DOM usually)
+                if (visibleModals.length > 0) {
+                    const topModal = visibleModals[visibleModals.length - 1];
+                    window.closeModal(topModal.id);
+                }
+            }
+        });
+    }
+</script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: var(--bg-tertiary); 
+        border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: var(--secondary); 
+        border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--primary); 
+    }
+</style>

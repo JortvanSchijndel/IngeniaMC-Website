@@ -1,0 +1,114 @@
+---
+/**
+    * success.astro
+    *
+    * Post-purchase confirmation page.
+    *
+    * Fix applied: the original page cleared `localStorage.getItem('ingeniamc_cart_v2')`
+    * but Cart.astro uses `sessionStorage`. This means the cart was never actually
+    * cleared after a purchase. This page now calls `window.clearCart()` (registered
+    * by Cart.astro) which correctly clears sessionStorage and re-renders the badge.
+    *
+    * Why `window.clearCart()` instead of direct sessionStorage access?
+    * Cart.astro manages its own state. Going around it via direct storage access
+    * would leave in-memory state stale (cart count badge, button states). Calling
+    * the registered global ensures all reactive state is cleaned up consistently.
+    */
+
+import Layout from "../../layouts/Layout.astro";
+import Discord from "./../../assets/icons/discord.svg";
+import { DISCORD_URL, SERVER_IP } from "../../config";
+---
+
+<Layout>
+    <section class="min-h-[80vh] flex items-center justify-center px-6 py-24">
+        <div class="max-w-2xl w-full text-center">
+            <!-- Success icon -->
+            <div class="mb-8 flex justify-center pt-5" aria-hidden="true">
+                <div class="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 animate-bounce">
+                    <svg
+                            width="48"
+                            height="48"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="3"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                    >
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+            <h1 class="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter mb-4">
+                Thank You for Your <span class="text-(--ingenia)">Purchase!</span>
+            </h1>
+
+            <p class="text-(--secondary) text-lg mb-8 font-medium">
+                Your order has been confirmed and is being processed.
+            </p>
+
+            <div class="flex justify-center gap-6 mb-8">
+                <div class="bg-(--bg-secondary) border border-(--bg-quaternary) p-6 rounded-2xl text-left">
+                    <p class="text-[10px] font-black text-(--secondary) uppercase tracking-widest mb-1 opacity-50">
+                        Join the Server
+                    </p>
+                    <p class="text-xl font-black text-white uppercase tracking-tight">
+                        {SERVER_IP}
+                    </p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <p class="text-(--secondary) text-sm mb-8 max-w-lg mx-auto leading-relaxed">
+                    You should receive your items in-game within 5 minutes. If you encounter any
+                    issues, please reach out to our support team on Discord.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a
+                            href={DISCORD_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#5865F2] text-white font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-[#5865F2]/20 flex items-center justify-center gap-2"
+                    >
+                        <Discord fill="white" width={15} height={15} aria-hidden="true" />
+                        Contact Support
+                    </a>
+                    <a
+                            href="/store"
+                            class="w-full sm:w-auto px-8 py-4 rounded-xl bg-(--bg-secondary) border border-(--bg-quaternary) text-(--primary) font-black text-[11px] uppercase tracking-widest hover:bg-(--bg-tertiary) transition-all"
+                    >
+                        Return to Store
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</Layout>
+
+<script>
+    /**
+     * Clears the cart state after a successful purchase.
+     *
+     * `window.clearCart` is registered by Cart.astro on `astro:page-load`.
+     * It clears sessionStorage AND updates in-memory state + the cart count
+     * badge, so both are consistent.
+     *
+     * If clearCart isn't registered yet (e.g. Cart.astro isn't on this layout),
+     * we fall back to directly clearing sessionStorage as a safety measure.
+     */
+    function clearCartAfterPurchase(): void {
+        if (typeof (window as any).clearCart === "function") {
+            (window as any).clearCart();
+        } else {
+            // Fallback: Cart component may not be present on this page's layout
+            sessionStorage.removeItem("ingeniamc_cart_v2");
+            const badge = document.getElementById("cart-count");
+            if (badge) badge.classList.add("hidden");
+        }
+    }
+
+    document.addEventListener("astro:page-load", clearCartAfterPurchase);
+</script>

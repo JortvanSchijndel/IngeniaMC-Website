@@ -1,0 +1,67 @@
+---
+import Modal from './Modal.astro';
+
+import { SERVER_IP, SERVER_VERSION } from '../config';
+
+import Minecraft from "../assets/icons/minecraft.svg"
+import Copy from "../assets/icons/copy.svg"
+---
+
+<Modal
+        id="ip"
+        header="Join the server!"
+        headerIcon={Minecraft}
+        headerIconClass="w-9 h-9 fill-(--ingenia)"
+        headerDescription="Copy the IP below to connect."
+        closeX={true}
+        closeButton={true}
+        width="max-w-xl"
+        height="auto"
+>
+    <div class="flex flex-col items-center">
+        <video
+                src="/videos/join-server-tutorial.mp4"
+                preload="none"
+                muted
+                loop
+                autoplay
+                controlslist="nodownload noremoteplayback noplaybackrate"
+                class="rounded-lg w-full mb-4 shadow-lg"
+        />
+
+        <p class="text-(--primary) text-center mb-6 text-sm">
+            Copy the IP address below to join the server.<br>
+            The Minecraft version that is currently supported, is version:
+            <span class="inline-block p-1 rounded-lg bg-(--bg-tertiary) text-(--ingenia) font-[minecraft] mt-2 text-xs">{SERVER_VERSION}</span>
+        </p>
+
+        <div
+                class="flex items-center justify-between w-full p-2.5 rounded-xl bg-(--bg-tertiary) cursor-pointer border border-white/5 hover:border-(--ingenia)/50 transition-all group duration-300 shadow-inner"
+                onclick="copyToClipboard()"
+        >
+            <span id='ip-text' class="text-(--ingenia) text-lg font-[minecraft] ml-4 select-all">{SERVER_IP}</span>
+            <div class="p-2 rounded-lg bg-(--bg-quaternary) text-(--primary) font-bold flex items-center gap-2 text-xs uppercase tracking-wider group-hover:bg-(--ingenia) group-hover:text-black transition-colors">
+                <Copy width={18} height={18} fill="currentColor"/>
+                <span>Copy</span>
+            </div>
+        </div>
+    </div>
+    <script is:inline define:vars={{ SERVER_IP }}>
+        if (!window.copyToClipboard) {
+            window.copyToClipboard = async function() {
+                try {
+                    await navigator.clipboard.writeText(SERVER_IP);
+                    const ip = document.getElementById('ip-text');
+                    if (ip) {
+                        ip.innerText = "IP Copied!";
+                        setTimeout(() => {
+                            ip.innerText = SERVER_IP;
+                        }, 2000);
+                    }
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+            }
+        }
+    </script>
+</Modal>

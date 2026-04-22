@@ -1,0 +1,32 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+    <section class="min-h-[80vh] flex items-center justify-center px-6 py-24">
+        <div class="max-w-2xl w-full text-center">
+            <div class="mb-8 flex justify-center">
+                <div class="w-24 h-24 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </div>
+            </div>
+
+            <h1 class="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter mb-4">
+                Payment <span class="text-red-500">Failed</span>
+            </h1>
+            
+            <p class="text-(--secondary) text-lg mb-12 font-medium">
+                Something went wrong with your transaction. Don't worry, your cart is still safe.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="/store" class="w-full sm:w-auto px-12 py-4 rounded-xl bg-(--ingenia) text-(--bg-primary) font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all">
+                    Retry Purchase
+                </a>
+            </div>
+        </div>
+    </section>
+</Layout>

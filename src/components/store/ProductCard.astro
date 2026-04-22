@@ -1,0 +1,108 @@
+---
+/**
+    * ProductCard.astro
+    *
+    * Renders a single product card in the store grid.
+    *
+    * Props:
+    *   product  - Full StoreProduct data.
+    *   isOwned  - Whether the SSR session already owns this product.
+    */
+
+import { Image } from 'astro:assets';
+import type { StoreProduct } from '../../config';
+
+interface Props {
+    product: StoreProduct;
+    isOwned: boolean;
+}
+
+const { product, isOwned } = Astro.props;
+---
+
+<div
+        class="product-card flex flex-col bg-(--bg-secondary) rounded-2xl border border-(--bg-quaternary) overflow-hidden transition-all duration-500 group shadow-xl w-full max-w-xs"
+        data-product-id={product.id}
+>
+    <!-- Hero image — clicking opens the detail modal -->
+    <div
+            class="relative h-48 overflow-hidden cursor-pointer modal-trigger"
+            data-modal-id={product.id}
+            role="button"
+            tabindex="0"
+            aria-label={`View ${product.name} details`}
+    >
+        <Image
+                src={product.image}
+                alt={product.name}
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+        />
+        <div class="absolute inset-0 bg-linear-to-t from-(--bg-secondary) via-transparent to-transparent" aria-hidden="true"></div>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 flex flex-col flex-1">
+        <!-- Name + price -->
+        <div class="flex justify-between items-start mb-4 gap-2">
+            <h3 class="text-xl font-black text-(--primary) leading-tight uppercase tracking-tight">
+                {product.name}
+            </h3>
+            <div class="flex items-baseline gap-1.5 shrink-0">
+                <span class="text-xl font-black text-(--ingenia)">{product.price}</span>
+                {product.originalPrice && (
+                        <span class="text-(--secondary) text-[11px] line-through opacity-40">
+            {product.originalPrice}
+          </span>
+                )}
+            </div>
+        </div>
+
+        <!-- Feature list -->
+        <ul class="space-y-2 mb-6 flex-1" role="list">
+            {product.features.map(f => (
+                    <li class="flex items-center gap-2 text-(--secondary) text-[12px] font-medium">
+                        <div class="w-4 h-4 rounded-full bg-(--ingenia)/10 flex items-center justify-center shrink-0" aria-hidden="true">
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--ingenia)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </div>
+                        <span class="opacity-80">{f}</span>
+                    </li>
+            ))}
+        </ul>
+
+        <!-- Action buttons -->
+        <div class="grid grid-cols-2 gap-2">
+            {isOwned ? (
+                    <button
+                            disabled
+                            aria-disabled="true"
+                            data-owned="true"
+                            class="py-3 px-3 bg-(--bg-quaternary) text-(--secondary) rounded-xl font-black text-[10px] uppercase tracking-widest cursor-not-allowed opacity-70 col-span-2"
+                    >
+                        ✦ Already Owned
+                    </button>
+            ) : (
+                    <>
+                        <button
+                                class="add-to-cart-btn py-3 px-3 bg-(--ingenia) text-(--bg-primary) rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all"
+                                data-product-id={product.id}
+                                data-product-name={product.name}
+                                data-product-price={product.price}
+                                data-stripe-price-id={product.stripePriceId}
+                                data-product-image={product.image.src}
+                        >
+                            Buy Now
+                        </button>
+                        <button
+                                class="modal-trigger py-3 px-3 bg-(--bg-tertiary) text-(--primary) rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all border border-(--bg-quaternary)"
+                                data-modal-id={product.id}
+                                aria-label={`View ${product.name} details`}
+                        >
+                            Details
+                        </button>
+                    </>
+            )}
+        </div>
+    </div>
+</div>

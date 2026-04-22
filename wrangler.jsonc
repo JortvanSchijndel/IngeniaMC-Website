@@ -1,0 +1,22 @@
+{
+	"name": "ingeniamc-website",
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"compatibility_date": "2026-04-20",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"kv_namespaces": [
+		{
+			"binding": "CACHE",
+			"id": "07e2fb0d74f240b7a25ffd77e774f041"
+		}
+	],
+	"vars": {
+		"ALLOWED_ORIGIN": "https://ingeniamc.org"
+	},
+	"observability": {
+		"enabled": true
+	}
+}

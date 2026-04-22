@@ -1,0 +1,163 @@
+---
+import IpModal from "./IpModal.astro"
+
+import { DISCORD_URL } from '../config';
+
+import { Image } from 'astro:assets';
+import Logo from "../assets/logo.png"
+
+import Discord from "../assets/icons/discord.svg"
+import Minecraft from "../assets/icons/minecraft.svg"
+
+const { activePage } = Astro.props;
+---
+
+<IpModal />
+
+<nav class="bg-(--bg-secondary)/70 backdrop-blur-xl w-full z-50 fixed top-0 border-b border-white/5" transition:name="navbar">
+    <div class="w-full flex items-center justify-between container mx-auto px-6 h-15">
+        <a href="/" class="flex items-center gap-3">
+            <Image src={Logo} class="w-10" width={80} height={80} alt="logo" loading="eager"/>
+            <h1 class="text-(--primary) text-[20px] font-bold">IngeniaMC</h1>
+        </a>
+
+        <div class="hidden sm:flex items-center h-full gap-8">
+            <a href="/" class={`font-medium text-[13px] relative flex items-center justify-center transition-colors ${activePage === "home" ? "text-(--ingenia)" : "text-(--secondary) hover:text-(--primary)"}`}>
+                {activePage === "home" && <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-(--ingenia)" transition:name="nav-indicator"></div>}
+                Home
+            </a>
+
+            <a href="/attractions" class={`font-medium text-[13px] relative flex items-center justify-center transition-colors ${activePage === "attractions" ? "text-(--ingenia)" : "text-(--secondary) hover:text-(--primary)"}`}>
+                {activePage === "attractions" && <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-(--ingenia)" transition:name="nav-indicator"></div>}
+                Attractions
+            </a>
+
+            <a href="/map" class={`font-medium text-[13px] relative flex items-center justify-center transition-colors ${activePage === "map" ? "text-(--ingenia)" : "text-(--secondary) hover:text-(--primary)"}`}>
+                {activePage === "map" && <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-(--ingenia)" transition:name="nav-indicator"></div>}
+                Map
+            </a>
+
+            <a href="/store" class={`font-medium text-[13px] relative flex items-center justify-center transition-colors ${activePage === "store" ? "text-(--ingenia)" : "text-(--secondary) hover:text-(--primary)"}`}>
+                {activePage === "store" && <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-(--ingenia)" transition:name="nav-indicator"></div>}
+                Store
+            </a>
+        </div>
+
+        <div class="hidden lg:flex gap-4 items-center">
+            <a href="/contact" class="text-(--secondary) hover:text-(--primary) transition-colors font-normal text-[13px]">Contact Us</a>
+            <div
+                id="open-dialog-button"
+                onclick="openModal('ip')"
+                class="flex h-10 items-center justify-center text-[15px] text-black font-bold px-5 py-1.5 rounded-xl gap-2 cursor-pointer hover:bg-(--ingenia)/80 bg-(--ingenia) transition-all duration-300 shadow-lg shadow-(--ingenia)/10"
+            >
+                <Minecraft class="w-5 h-5 cursor-pointer" fill="black"/>
+                Join Server
+            </div>
+        </div>
+
+        <div class="sm:hidden flex items-center">
+            <button id="mobile-menu-btn" aria-label="Open Menu" class="text-(--secondary) hover:text-(--primary) focus:outline-none p-2 transition-all duration-300 rounded-lg">
+                <svg id="menu-icon-open" class="w-7 h-7 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7"></path>
+                </svg>
+                <svg id="menu-icon-close" class="w-7 h-7 hidden transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="flex flex-col items-center gap-6 fixed w-full border-white/5 bg-(--bg-secondary) backdrop-blur-xl overflow-hidden duration-500 ease-in-out max-h-0 opacity-0 pointer-events-none">
+        <div class="flex flex-col items-center gap-2 w-full pt-6">
+            <a href="/" class={`font-bold text-[20px] w-full text-center py-3 transition-all ${activePage === "home" ? "text-(--ingenia)" : "text-(--secondary)"}`}>
+                Home
+            </a>
+
+            <a href="/attractions" class={`font-bold text-[20px] w-full text-center py-3 transition-all ${activePage === "attractions" ? "text-(--ingenia)" : "text-(--secondary)"}`}>
+                Attractions
+            </a>
+
+            <a href="/map" class={`font-bold text-[20px] w-full text-center py-3 transition-all ${activePage === "map" ? "text-(--ingenia)" : "text-(--secondary)"}`}>
+                Map
+            </a>
+
+            <a href="/store" class={`font-bold text-[20px] w-full text-center py-3 transition-all ${activePage === "store" ? "text-(--ingenia)" : "text-(--secondary)"}`}>
+                Store
+            </a>
+        </div>
+
+        <div class="flex flex-col gap-4 w-full px-8 pb-8">
+            <button
+                    onclick="openModal('ip'); window.closeMobileMenu();"
+                    class="flex items-center h-12 justify-center bg-(--ingenia) text-[16px] text-black font-bold px-3 py-2 rounded-xl gap-2 cursor-pointer hover:bg-(--ingenia-hover) transition-all duration-300">
+                <Minecraft class="w-5 cursor-pointer" fill="currentColor"/>
+                Join Server
+            </button>
+            <a href={DISCORD_URL} target="_blank" class="h-12 flex items-center justify-center bg-(--discord) text-[16px] text-white font-bold px-3 py-2 rounded-xl gap-2 w-full hover:brightness-110 transition-all duration-300">
+                <Discord class="w-5 cursor" fill="currentColor"/>
+                Discord
+            </a>
+        </div>
+    </div>
+</nav>
+
+<script is:inline>
+    window['openMobileMenu'] = function() {
+        const menu = document.getElementById('mobile-menu');
+        const openIcon = document.getElementById('menu-icon-open');
+        const closeIcon = document.getElementById('menu-icon-close');
+        
+        if(menu) {
+            menu.classList.remove('max-h-0', 'opacity-0', 'pointer-events-none');
+            menu.classList.add('max-h-[500px]', 'opacity-100', 'pointer-events-auto');
+            
+            openIcon?.classList.add('hidden');
+            closeIcon?.classList.remove('hidden');
+        }
+    }
+
+    window['closeMobileMenu'] = function() {
+        const menu = document.getElementById('mobile-menu');
+        const openIcon = document.getElementById('menu-icon-open');
+        const closeIcon = document.getElementById('menu-icon-close');
+        
+        if(menu) {
+            menu.classList.add('max-h-0', 'opacity-0', 'pointer-events-none');
+            menu.classList.remove('max-h-[500px]', 'opacity-100', 'pointer-events-auto');
+            
+            openIcon?.classList.remove('hidden');
+            closeIcon?.classList.add('hidden');
+        }
+    }
+
+    function initMobileMenu() {
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+
+        if (btn && menu) {
+            btn.onclick = () => {
+                if (menu.classList.contains('max-h-0')) {
+                    window['openMobileMenu']();
+                } else {
+                    window['closeMobileMenu']();
+                }
+            };
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('astro:page-load', initMobileMenu);
+
+    // Close menu before navigation starts to allow transition
+    document.addEventListener('astro:before-preparation', () => {
+        const menu = document.getElementById('mobile-menu');
+
+        menu.classList.remove('duration-500');
+
+        window['closeMobileMenu']();
+    });
+
+    // Also run on initial load
+    initMobileMenu();
+</script>

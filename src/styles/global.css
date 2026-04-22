@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root{
+    --bg-primary: #0d0f14;
+    --bg-secondary: #13151a;
+    --bg-tertiary: #1a1c23;
+    --bg-quaternary: #22242c;
+
+    --primary: hsl(197, 100%, 99%);
+    --secondary: #b4bacc;
+
+    --ingenia: #f6ac10;
+    --discord: #5865F2;
+}
+
+.bg-main {
+    background-color: var(--bg-secondary);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/*noinspection CssUnknownTarget*/
+@font-face {
+    font-family: minecraft;
+    font-weight: 100 700;
+    src: url(/fonts/Minecraft.otf);
+}
+
+/*noinspection CssUnknownTarget*/
+@font-face {
+    font-family: enchantment;
+    src: url(/fonts/Enchantment.otf);
+}
