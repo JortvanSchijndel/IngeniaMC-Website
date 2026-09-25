@@ -2,6 +2,8 @@
 
 The official IngeniaMC Website.
 
+IngeniaMC was a Minecraft theme park project that originally started as MiniBuildCraft in 2018. After briefly evolving into a minigame server, the team returned to its main passion: creating an immersive, magical theme park in Minecraft.
+
 - No backend needed, made for Cloudflare Pages using Cloudflare Page Functions
 - Fully custom store using Stripe. No database. No Backend
 - Custom link hub with all the IngeniaMC Social URL's
